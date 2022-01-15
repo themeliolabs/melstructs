@@ -1,0 +1,29 @@
+[package]
+name = "themelio-structs"
+version = "0.1.0"
+authors = ["Themelio Labs"]
+edition = "2021"
+
+description = "Core data structures for Themelio"
+license = "MPL-2.0"
+repository = "https://github.com/themeliolabs/themelio-structs"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+arbitrary = "1.0.3"
+derive_more = "0.99.17"
+tmelcrypt = "0.2.4"
+stdcode = "0.1.7"
+num_enum = "0.5.6"
+serde_repr = "0.1.7"
+thiserror = "1.0.30"
+hex = "0.4.3"
+tap = "1.0.1"
+num = "0.4.0"
+
+
+[dependencies.serde]
+version = "1.0.133"
+features = ["derive"]
