@@ -1,7 +1,9 @@
-use serde::{Deserialize, Serialize};
-use tmelcrypt::Ed25519PK;
+use std::collections::BTreeMap;
 
 use crate::CoinValue;
+use derivative::Derivative;
+use serde::{Deserialize, Serialize};
+use tmelcrypt::Ed25519PK;
 
 /// StakeDoc is a stake document. It encapsulates all the information needed to verify consensus proofs.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -15,3 +17,5 @@ pub struct StakeDoc {
     /// Number of syms staked.
     pub syms_staked: CoinValue,
 }
+
+pub type ConsensusProof = BTreeMap<Ed25519PK, Vec<u8>>;

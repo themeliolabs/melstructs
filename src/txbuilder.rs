@@ -63,9 +63,9 @@ impl TransactionBuilder {
     }
 
     /// Adds a covenant script.
-    pub fn script(mut self, script: Vec<u8>) -> Self {
+    pub fn covenant(mut self, script: Vec<u8>) -> Self {
         self.given_covenants.insert(Address(script.hash()));
-        self.in_progress.scripts.push(script);
+        self.in_progress.covenants.push(script);
         self
     }
 

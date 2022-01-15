@@ -83,7 +83,7 @@ pub struct Transaction {
     pub outputs: Vec<CoinData>,
     pub fee: CoinValue,
     #[serde(with = "stdcode::hexvec")]
-    pub scripts: Vec<Vec<u8>>,
+    pub covenants: Vec<Vec<u8>>,
     #[serde(with = "stdcode::hex")]
     pub data: Vec<u8>,
     #[serde(with = "stdcode::hexvec")]
@@ -98,7 +98,7 @@ impl Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
             fee: 0.into(),
-            scripts: Vec::new(),
+            covenants: Vec::new(),
             data: Vec::new(),
             sigs: Vec::new(),
         }
@@ -111,7 +111,7 @@ impl Transaction {
             inputs: vec![],
             outputs: vec![],
             fee: 0.into(),
-            scripts: vec![],
+            covenants: vec![],
             data: vec![],
             sigs: vec![],
         }
@@ -155,13 +155,13 @@ impl Transaction {
 
     /// Replaces the scripts of the transaction
     pub fn with_scripts(mut self, scripts: Vec<Vec<u8>>) -> Self {
-        self.scripts = scripts;
+        self.covenants = scripts;
         self
     }
 
     /// Add a script to the transaction
     pub fn add_script(mut self, script: Vec<u8>) -> Self {
-        self.scripts.push(script);
+        self.covenants.push(script);
         self
     }
 
@@ -230,8 +230,8 @@ impl Transaction {
     }
 
     /// scripts_as_map returns a HashMap mapping the hash of each script in the transaction to the script itself.
-    pub fn script_as_map(&self) -> HashMap<Address, Vec<u8>> {
-        self.scripts
+    pub fn covenants_as_map(&self) -> HashMap<Address, Vec<u8>> {
+        self.covenants
             .iter()
             .map(|script| (Address(script.hash()), script.clone()))
             .collect()
@@ -251,7 +251,7 @@ impl Transaction {
     /// Returns the weight of the transaction, given a function that maps a covenant to its weight.
     pub fn weight(&self, cov_to_weight: impl Fn(&[u8]) -> u128) -> u128 {
         let raw_length = stdcode::serialize(self).unwrap().len() as u128;
-        let script_weights: u128 = self.scripts.iter().map(|scr| cov_to_weight(&scr)).sum();
+        let script_weights: u128 = self.covenants.iter().map(|scr| cov_to_weight(&scr)).sum();
         // we price in the net state "burden".
         // how much is that? let's assume that history is stored for 1 month. this means that "stored" bytes are around 240 times more expensive than "temporary" bytes.
         // we also take into account that stored stuff is probably going to be stuffed into something much cheaper (e.g. HDD rather than RAM), almost certainly more than 24 times cheaper.
@@ -347,12 +347,11 @@ impl CoinID {
 }
 
 #[derive(Serialize, Deserialize, Clone, Arbitrary, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
-/// The data bound to a coin ID. Contains the "contents" of a coin, i.e. its constraint hash, value, and coin type.
+/// The data bound to a coin ID. Contains the "contents" of a coin, i.e. its covenant hash, value, and coin type.
 pub struct CoinData {
     #[serde(with = "stdcode::asstr")]
     pub covhash: Address,
     pub value: CoinValue,
-    // #[serde(with = "stdcode::hex")]
     pub denom: Denom,
     #[serde(with = "stdcode::hex")]
     pub additional_data: Vec<u8>,
