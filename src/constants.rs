@@ -1,4 +1,4 @@
-use crate::{BlockHeight, CoinValue};
+use crate::CoinValue;
 
 /// Maximum coin value
 pub const MAX_COINVAL: CoinValue = CoinValue(1 << 120);

@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 
 use crate::CoinValue;
-use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use tmelcrypt::Ed25519PK;
 

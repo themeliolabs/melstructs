@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 
 use crate::{Address, BlockHeight, CoinValue, Transaction, TxHash};
 use arbitrary::Arbitrary;
@@ -88,6 +88,6 @@ impl Block {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AbbrBlock {
     pub header: Header,
-    pub txhashes: HashSet<TxHash>,
+    pub txhashes: BTreeSet<TxHash>,
     pub proposer_action: Option<ProposerAction>,
 }
