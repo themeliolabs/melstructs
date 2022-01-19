@@ -367,7 +367,7 @@ impl CoinData {
 pub enum Denom {
     Mel,
     Sym,
-    NomDosc,
+    Erg,
 
     NewCoin,
     Custom(TxHash),
@@ -378,7 +378,7 @@ impl Display for Denom {
         let s: String = match self {
             Denom::Mel => "MEL".into(),
             Denom::Sym => "SYM".into(),
-            Denom::NomDosc => "N-DOSC".into(),
+            Denom::Erg => "ERG".into(),
             Denom::NewCoin => "(NEWCOIN)".into(),
             Denom::Custom(hash) => format!("CUSTOM-{}", hash.0),
         };
@@ -400,7 +400,7 @@ impl FromStr for Denom {
         match s {
             "MEL" => Ok(Denom::Mel),
             "SYM" => Ok(Denom::Sym),
-            "N-DOSC" => Ok(Denom::NomDosc),
+            "ERG" => Ok(Denom::Erg),
             "(NEWCOIN)" => Ok(Denom::NewCoin),
             other => {
                 let splitted = other.split('-').collect::<Vec<_>>();
@@ -419,7 +419,7 @@ impl Denom {
         match self {
             Self::Mel => b"m".to_vec(),
             Self::Sym => b"s".to_vec(),
-            Self::NomDosc => b"d".to_vec(),
+            Self::Erg => b"d".to_vec(),
             Self::NewCoin => b"".to_vec(),
             Self::Custom(hash) => hash.0.to_vec(),
         }
@@ -429,7 +429,7 @@ impl Denom {
         Some(match vec {
             b"m" => Self::Mel,
             b"s" => Self::Sym,
-            b"d" => Self::NomDosc,
+            b"d" => Self::Erg,
 
             b"" => Self::NewCoin,
             other => Self::Custom(HashVal(other.try_into().ok()?).into()),
