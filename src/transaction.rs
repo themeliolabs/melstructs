@@ -192,7 +192,7 @@ impl Transaction {
             output = false;
         }
 
-        if self.outputs.len() > 255 || self.inputs.len() > 255 {
+        if self.outputs.len() > 255 {
             output = false;
         }
 
@@ -209,7 +209,7 @@ impl Transaction {
 
     /// sign_ed25519 consumes the transaction, appends an ed25519 signature, and returns it.
     pub fn signed_ed25519(mut self, sk: Ed25519SK) -> Self {
-        self.sigs.push(sk.sign(&self.hash_nosigs().0).into());
+        self.sigs.push(sk.sign(&self.hash_nosigs().0));
         self
     }
 
@@ -251,7 +251,7 @@ impl Transaction {
     /// Returns the weight of the transaction, given a function that maps a covenant to its weight.
     pub fn weight(&self, cov_to_weight: impl Fn(&[u8]) -> u128) -> u128 {
         let raw_length = stdcode::serialize(self).unwrap().len() as u128;
-        let script_weights: u128 = self.covenants.iter().map(|scr| cov_to_weight(&scr)).sum();
+        let script_weights: u128 = self.covenants.iter().map(|scr| cov_to_weight(scr)).sum();
         // we price in the net state "burden".
         // how much is that? let's assume that history is stored for 1 month. this means that "stored" bytes are around 240 times more expensive than "temporary" bytes.
         // we also take into account that stored stuff is probably going to be stuffed into something much cheaper (e.g. HDD rather than RAM), almost certainly more than 24 times cheaper.

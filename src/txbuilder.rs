@@ -89,7 +89,7 @@ impl TransactionBuilder {
 
             range
                 .into_iter()
-                .for_each(|_index| tx.sigs.push(vec![0; max_sig_size].into()));
+                .for_each(|_index| tx.sigs.push(vec![0; max_sig_size]));
 
             tx.base_fee(fee_multiplier, 0, cov_to_weight)
         });

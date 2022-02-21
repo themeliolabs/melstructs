@@ -61,12 +61,12 @@ impl CoinValue {
 
     /// Checked addition.
     pub fn checked_add(self, other: Self) -> Option<Self> {
-        self.0.checked_add(other.0).map(|a| Self(a))
+        self.0.checked_add(other.0).map(Self)
     }
 
     /// Checked subtraction.
     pub fn checked_sub(self, other: Self) -> Option<Self> {
-        self.0.checked_sub(other.0).map(|a| Self(a))
+        self.0.checked_sub(other.0).map(Self)
     }
 }
 
