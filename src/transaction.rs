@@ -270,7 +270,6 @@ impl Transaction {
 
     /// Convenience function that constructs a CoinID that points to a certain output of this transaction. Panics if the index is out of bounds.
     pub fn output_coinid(&self, index: u8) -> CoinID {
-        assert!((index as usize) < self.outputs.len());
         CoinID {
             txhash: self.hash_nosigs(),
             index,
