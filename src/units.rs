@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{borrow::Cow, fmt::Display};
 
 use arbitrary::Arbitrary;
 use derive_more::{
@@ -49,6 +49,58 @@ impl Display for CoinValue {
             self.0 / MICRO_CONVERTER,
             self.0 % MICRO_CONVERTER
         )
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum CoinValueParseError {
+    #[error("cannot parse coinvalue")]
+    CannotParse,
+}
+
+impl FromStr for CoinValue {
+    type Err = CoinValueParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (first_half, second_half) =
+            s.split_once('.').ok_or(CoinValueParseError::CannotParse)?;
+        let first_half: u128 = first_half
+            .trim()
+            .parse()
+            .ok()
+            .ok_or(CoinValueParseError::CannotParse)?;
+
+        // for the second half, we first pad it out to 6 digits, then parse
+        let second_half = second_half.trim();
+        if second_half.len() > 6 {
+            return Err(CoinValueParseError::CannotParse);
+        }
+        let second_half = if second_half.len() == 6 {
+            Cow::Borrowed(second_half)
+        } else {
+            let mut buf = String::new();
+            let count = 6 - second_half.len();
+            buf.push_str(second_half);
+            for _ in 0..count {
+                buf.push('0');
+            }
+            Cow::Owned(buf)
+        };
+        let second_half: u128 = second_half
+            .parse()
+            .ok()
+            .ok_or(CoinValueParseError::CannotParse)?;
+
+        if second_half >= 1_000_000 {
+            return Err(CoinValueParseError::CannotParse);
+        }
+        Ok(CoinValue(
+            first_half
+                .checked_mul(1_000_000)
+                .ok_or(CoinValueParseError::CannotParse)?
+                .checked_add(second_half)
+                .ok_or(CoinValueParseError::CannotParse)?,
+        ))
     }
 }
 
@@ -151,4 +203,16 @@ impl FromStr for Address {
 pub enum AddrParseError {
     #[error("cannot parse covhash address")]
     CannotParse,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::CoinValue;
+
+    #[test]
+    fn coinvalue_parse() {
+        let s = "12345.99";
+        let cv: CoinValue = s.parse().unwrap();
+        dbg!(cv.to_string());
+    }
 }
