@@ -4,6 +4,7 @@ use crate::{Address, BlockHeight, CoinValue, Transaction, TxHash};
 use arbitrary::Arbitrary;
 use derivative::Derivative;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use parse_display::{Display, FromStr};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use tmelcrypt::HashVal;
@@ -16,12 +17,15 @@ use tmelcrypt::HashVal;
     TryFromPrimitive,
     Eq,
     PartialEq,
+    Display,
+    FromStr,
     Debug,
     Serialize_repr,
     Deserialize_repr,
     Hash,
     Arbitrary,
 )]
+#[display(style = "snake_case")]
 #[repr(u8)]
 pub enum NetID {
     Testnet = 0x01,
@@ -90,4 +94,14 @@ pub struct AbbrBlock {
     pub header: Header,
     pub txhashes: BTreeSet<TxHash>,
     pub proposer_action: Option<ProposerAction>,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::NetID;
+
+    #[test]
+    fn netid_snake_case() {
+        assert_eq!(NetID::Custom02.to_string(), "custom02")
+    }
 }

@@ -23,6 +23,7 @@ hex = "0.4.3"
 tap = "1.0.1"
 num = "0.4.0"
 derivative = "2.2.0"
+parse-display = "0.5.5"
 
 
 [dependencies.serde]
