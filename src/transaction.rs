@@ -75,6 +75,13 @@ impl Display for TxKind {
 #[serde(transparent)]
 pub struct TxHash(pub HashVal);
 
+impl FromStr for TxHash {
+    type Err = hex::FromHexError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(TxHash(s.parse()?))
+    }
+}
+
 /// Transaction represents an individual, serializable Themelio transaction.
 #[derive(Clone, Arbitrary, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Transaction {
