@@ -358,6 +358,7 @@ pub struct CoinData {
     #[serde(with = "stdcode::asstr")]
     pub covhash: Address,
     pub value: CoinValue,
+    #[serde(with = "stdcode::asstr")]
     pub denom: Denom,
     #[serde(with = "stdcode::hex")]
     pub additional_data: Vec<u8>,
