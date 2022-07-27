@@ -175,7 +175,7 @@ impl BlockHeight {
     Deserialize,
     Arbitrary,
 )]
-pub struct Address(pub HashVal);
+pub struct Address(#[serde(with = "stdcode::asstr")] pub HashVal);
 
 impl Address {
     /// Returns the address that represents destruction of a coin.
