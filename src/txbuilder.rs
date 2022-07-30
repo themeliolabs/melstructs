@@ -114,7 +114,7 @@ impl TransactionBuilder {
 
     /// Attempts to generate the transaction.
     pub fn build(self) -> Result<Transaction, TransactionBuildError> {
-        if self.in_balance != self.out_balance {
+        if self.in_balance != self.out_balance && self.in_progress.kind != TxKind::Faucet {
             Err(TransactionBuildError::Unbalanced)
         } else if !self.in_progress.is_well_formed() {
             Err(TransactionBuildError::NotWellFormed)
