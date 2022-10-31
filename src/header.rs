@@ -1,7 +1,8 @@
+#![allow(clippy::mutable_key_type)] // false positive from the `bytes` crate
 use std::collections::{BTreeSet, HashSet};
 
 use crate::{Address, BlockHeight, CoinValue, Transaction, TxHash};
-use arbitrary::Arbitrary;
+
 use derivative::Derivative;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use parse_display::{Display, FromStr};
@@ -23,7 +24,6 @@ use tmelcrypt::HashVal;
     Serialize_repr,
     Deserialize_repr,
     Hash,
-    Arbitrary,
 )]
 #[display(style = "snake_case")]
 #[repr(u8)]
@@ -38,7 +38,7 @@ pub enum NetID {
     Custom08 = 0x08,
     Mainnet = 0xff,
 }
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Arbitrary)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 /// A block header, which commits to a particular SealedState.
 pub struct Header {
     pub network: NetID,

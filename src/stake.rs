@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::CoinValue;
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use tmelcrypt::Ed25519PK;
 
@@ -17,4 +18,5 @@ pub struct StakeDoc {
     pub syms_staked: CoinValue,
 }
 
-pub type ConsensusProof = BTreeMap<Ed25519PK, Vec<u8>>;
+/// A consensus proof is a mapping from signing key to signature.
+pub type ConsensusProof = BTreeMap<Ed25519PK, Bytes>;

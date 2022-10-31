@@ -8,11 +8,12 @@ use std::{
     str::FromStr,
 };
 
-use arbitrary::Arbitrary;
+use bytes::Bytes;
 use derive_more::{Display, From, Into};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use serde_with::serde_as;
 use thiserror::Error;
 use tmelcrypt::{Ed25519SK, HashVal, Hashable};
 
@@ -23,7 +24,6 @@ use tmelcrypt::{Ed25519SK, HashVal, Hashable};
     TryFromPrimitive,
     Eq,
     PartialEq,
-    Arbitrary,
     Debug,
     Serialize_repr,
     Deserialize_repr,
@@ -36,9 +36,16 @@ pub enum TxKind {
     Faucet = 0xff,
     LiqDeposit = 0x52,
     LiqWithdraw = 0x53,
+
     Normal = 0x00,
     Stake = 0x10,
     Swap = 0x51,
+}
+
+impl Default for TxKind {
+    fn default() -> Self {
+        Self::Normal
+    }
 }
 
 impl Display for TxKind {
@@ -69,7 +76,6 @@ impl Display for TxKind {
     Into,
     Serialize,
     Deserialize,
-    Arbitrary,
     Display,
 )]
 #[serde(transparent)]
@@ -83,105 +89,38 @@ impl FromStr for TxHash {
 }
 
 /// Transaction represents an individual, serializable Themelio transaction.
-#[derive(Clone, Arbitrary, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[serde_as]
+#[derive(Clone, Debug, Serialize, Deserialize, Hash, PartialEq, Eq, Default)]
 pub struct Transaction {
+    /// The "kind" of the transaction. Most transactions are of kind [TxKind::Normal].
     pub kind: TxKind,
+    /// The coins that this transaction spends, identified by [CoinID] (transaction hash and index)
     pub inputs: Vec<CoinID>,
+    /// The outputs that this transaction creates.
     pub outputs: Vec<CoinData>,
+    /// The fee paid by this transaction, in MEL.
     pub fee: CoinValue,
-    #[serde(with = "stdcode::hexvec")]
-    pub covenants: Vec<Vec<u8>>,
-    #[serde(with = "stdcode::hex")]
-    pub data: Vec<u8>,
-    #[serde(with = "stdcode::hexvec")]
-    pub sigs: Vec<Vec<u8>>,
+    #[serde_as(as = "Vec<stdcode::HexBytes>")]
+    /// The *contents* of the covenants locking the coins spent by this transaction. Themelio is uniformly "pay to script hash", so coins ([CoinData]s) themselves only contain the *hash* of the covenant locking the coin. The spending transaction must provide the actual covenants (in MelVM bytecode).
+    ///
+    /// The ordering of this field does not matter. As long as there is some element in `covenants` corresponding to each unique `covhash` of the coins being spent, we're good.
+    pub covenants: Vec<Bytes>,
+    #[serde_as(as = "stdcode::HexBytes")]
+    /// Arbitrary additional data of the transaction. Used mostly for unlocking covenants, as well as playing a special role in Melswap and Melmint transactions.
+    pub data: Bytes,
+    #[serde_as(as = "Vec<stdcode::HexBytes>")]
+    /// A place to place cryptographically malleable data, usually signatures. The reason why we use this rather than `data` is because `sigs` is ignored when computing the unique hash of a transaction (see [Transaction::hash_nosigs]), which is important for checking whether a particular transaction went through while scanning the blockchain by transaction hash. (This is similar to the reason SegWit was included in Bitcoin)
+    pub sigs: Vec<Bytes>,
 }
 
 impl Transaction {
-    /// An empty transaction with kind Normal, no inputs, no fees, etc.
-    pub fn empty_test() -> Self {
-        Transaction {
-            kind: TxKind::Normal,
-            inputs: Vec::new(),
-            outputs: Vec::new(),
-            fee: 0.into(),
-            covenants: Vec::new(),
-            data: Vec::new(),
-            sigs: Vec::new(),
-        }
-    }
-
     /// Creates a new transaction with the given kind, no inputs, no outputs, no nothing.
     pub fn new(kind: TxKind) -> Self {
         Self {
             kind,
-            inputs: vec![],
-            outputs: vec![],
-            fee: 0.into(),
-            covenants: vec![],
-            data: vec![],
-            sigs: vec![],
+
+            ..Default::default()
         }
-    }
-
-    /// Replaces the kind of the transaction
-    pub fn with_kind(mut self, kind: TxKind) -> Self {
-        self.kind = kind;
-        self
-    }
-
-    /// Replaces the inputs of the transaction
-    pub fn with_inputs(mut self, inputs: Vec<CoinID>) -> Self {
-        self.inputs = inputs;
-        self
-    }
-
-    /// Add an input
-    pub fn add_input(mut self, input: CoinID) -> Self {
-        self.inputs.push(input);
-        self
-    }
-
-    /// Replaces the outputs of the transaction
-    pub fn with_outputs(mut self, outputs: Vec<CoinData>) -> Self {
-        self.outputs = outputs;
-        self
-    }
-
-    /// Add an output
-    pub fn add_output(mut self, output: CoinData) -> Self {
-        self.outputs.push(output);
-        self
-    }
-
-    /// Replaces the fee of the transaction
-    pub fn with_fee(mut self, fee: CoinValue) -> Self {
-        self.fee = fee;
-        self
-    }
-
-    /// Replaces the scripts of the transaction
-    pub fn with_scripts(mut self, scripts: Vec<Vec<u8>>) -> Self {
-        self.covenants = scripts;
-        self
-    }
-
-    /// Add a script to the transaction
-    pub fn add_script(mut self, script: Vec<u8>) -> Self {
-        self.covenants.push(script);
-        self
-    }
-
-    /// Replaces the scripts of the transaction
-    pub fn with_data(mut self, data: Vec<u8>) -> Self {
-        self.data = data;
-        self
-    }
-
-    /// Replaces the scripts of the transaction
-    pub fn with_sigs(mut self, sigs: Vec<Vec<u8>>) -> Self {
-        self.sigs = sigs.into_iter().collect();
-        self
     }
 
     /// Checks whether or not the transaction is well formed, respecting coin size bounds and such. **Does not** fully validate the transaction.
@@ -216,7 +155,7 @@ impl Transaction {
 
     /// sign_ed25519 consumes the transaction, appends an ed25519 signature, and returns it.
     pub fn signed_ed25519(mut self, sk: Ed25519SK) -> Self {
-        self.sigs.push(sk.sign(&self.hash_nosigs().0));
+        self.sigs.push(sk.sign(&self.hash_nosigs().0).into());
         self
     }
 
@@ -237,7 +176,7 @@ impl Transaction {
     }
 
     /// scripts_as_map returns a HashMap mapping the hash of each script in the transaction to the script itself.
-    pub fn covenants_as_map(&self) -> HashMap<Address, Vec<u8>> {
+    pub fn covenants_as_map(&self) -> HashMap<Address, Bytes> {
         self.covenants
             .iter()
             .map(|script| (Address(script.hash()), script.clone()))
@@ -284,9 +223,7 @@ impl Transaction {
     }
 }
 
-#[derive(
-    Serialize, Deserialize, Clone, Debug, Copy, Arbitrary, Ord, PartialOrd, Eq, PartialEq, Hash,
-)]
+#[derive(Serialize, Deserialize, Clone, Debug, Copy, Ord, PartialOrd, Eq, PartialEq, Hash)]
 /// A coin ID, consisting of a transaction hash and index. Uniquely identifies a coin in Themelio's history.
 pub struct CoinID {
     pub txhash: TxHash,
@@ -352,7 +289,8 @@ impl CoinID {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Arbitrary, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[serde_as]
+#[derive(Serialize, Deserialize, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 /// The data bound to a coin ID. Contains the "contents" of a coin, i.e. its covenant hash, value, and coin type.
 pub struct CoinData {
     #[serde(with = "stdcode::asstr")]
@@ -360,8 +298,8 @@ pub struct CoinData {
     pub value: CoinValue,
     #[serde(with = "stdcode::asstr")]
     pub denom: Denom,
-    #[serde(with = "stdcode::hex")]
-    pub additional_data: Vec<u8>,
+    #[serde_as(as = "stdcode::HexBytes")]
+    pub additional_data: Bytes,
 }
 
 impl CoinData {
@@ -370,7 +308,7 @@ impl CoinData {
     }
 }
 
-#[derive(Clone, Arbitrary, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Copy)]
+#[derive(Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash, Copy)]
 pub enum Denom {
     Mel,
     Sym,
@@ -422,13 +360,13 @@ impl FromStr for Denom {
 }
 
 impl Denom {
-    pub fn to_bytes(self) -> Vec<u8> {
+    pub fn to_bytes(self) -> Bytes {
         match self {
-            Self::Mel => b"m".to_vec(),
-            Self::Sym => b"s".to_vec(),
-            Self::Erg => b"d".to_vec(),
-            Self::NewCoin => b"".to_vec(),
-            Self::Custom(hash) => hash.0.to_vec(),
+            Self::Mel => Bytes::from_static(b"m"),
+            Self::Sym => Bytes::from_static(b"s"),
+            Self::Erg => Bytes::from_static(b"d"),
+            Self::NewCoin => Bytes::new(),
+            Self::Custom(hash) => Bytes::copy_from_slice(&hash.0),
         }
     }
 
@@ -449,7 +387,7 @@ impl Serialize for Denom {
     where
         S: Serializer,
     {
-        DenomInner(self.to_bytes()).serialize(serializer)
+        DenomInner(self.to_bytes().into()).serialize(serializer)
     }
 }
 
@@ -465,10 +403,10 @@ impl<'de> Deserialize<'de> for Denom {
 }
 
 /// A coin denomination, like mel, sym, etc.
-#[derive(Serialize, Deserialize, Clone, Arbitrary, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 struct DenomInner(#[serde(with = "stdcode::hex")] Vec<u8>);
 
-#[derive(Serialize, Deserialize, Clone, Arbitrary, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, Hash)]
 /// A `CoinData` but coupled with a block height. This is what actually gets stored in the global state, allowing constraints and the validity-checking algorithm to easily access the age of a coin.
 pub struct CoinDataHeight {
     pub coin_data: CoinData,

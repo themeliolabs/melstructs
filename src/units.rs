@@ -1,10 +1,10 @@
 use std::{borrow::Cow, fmt::Display};
 
-use arbitrary::Arbitrary;
 use derive_more::{
     Add, AddAssign, Display, Div, DivAssign, From, FromStr, Into, Mul, MulAssign, Sub, SubAssign,
     Sum,
 };
+
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
@@ -14,7 +14,6 @@ use crate::{MICRO_CONVERTER, STAKE_EPOCH};
 
 /// Newtype representing a monetary value in microunits. The Display and FromStr implementations divide by 1,000,000 automatically.
 #[derive(
-    Arbitrary,
     Clone,
     Copy,
     Default,
@@ -124,7 +123,6 @@ impl CoinValue {
 
 /// Newtype representing a block height.
 #[derive(
-    Arbitrary,
     Clone,
     Copy,
     Debug,
@@ -161,19 +159,7 @@ impl BlockHeight {
 
 /// An address is the hash of a MelVM covenant. In Bitcoin terminology, all Themelio addresses are "pay-to-script-hash".
 #[derive(
-    Copy,
-    Clone,
-    Debug,
-    Eq,
-    PartialEq,
-    Hash,
-    PartialOrd,
-    Ord,
-    From,
-    Into,
-    Serialize,
-    Deserialize,
-    Arbitrary,
+    Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord, From, Into, Serialize, Deserialize,
 )]
 pub struct Address(pub HashVal);
 
