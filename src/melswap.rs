@@ -173,6 +173,16 @@ impl PoolKey {
         Self { left: x, right: y }.to_canonical().unwrap()
     }
 
+    /// Gets the left-hand-size.
+    pub fn left(&self) -> Denom {
+        self.left
+    }
+
+    /// Gets the right-hand-size.
+    pub fn right(&self) -> Denom {
+        self.right
+    }
+
     /// Ensures that this pool key is canonical. If the two denoms are the same, returns None.
     #[allow(clippy::comparison_chain)]
     fn to_canonical(self) -> Option<Self> {
