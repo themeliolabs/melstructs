@@ -55,6 +55,27 @@ impl Display for TxKind {
     }
 }
 
+#[derive(Error, Debug, Clone)]
+#[error("Unable to parse {0} into TxKind")]
+pub struct ParseTxKindError(String);
+
+impl FromStr for TxKind {
+    type Err = ParseTxKindError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Normal" => Ok(TxKind::Normal),
+            "Stake" => Ok(TxKind::Stake),
+            "DoscMint" => Ok(TxKind::DoscMint),
+            "Swap" => Ok(TxKind::Swap),
+            "LiqDeposit" => Ok(TxKind::LiqDeposit),
+            "LiqWithdraw" => Ok(TxKind::LiqWithdraw),
+            "Faucet" => Ok(TxKind::Faucet),
+            _ => Err(ParseTxKindError(s.into()))
+        }
+    }
+}
+
 /// A newtype representing the hash of a transaction.
 #[derive(
     Copy,
