@@ -71,7 +71,7 @@ impl FromStr for TxKind {
             "LiqDeposit" => Ok(TxKind::LiqDeposit),
             "LiqWithdraw" => Ok(TxKind::LiqWithdraw),
             "Faucet" => Ok(TxKind::Faucet),
-            _ => Err(ParseTxKindError(s.into()))
+            _ => Err(ParseTxKindError(s.into())),
         }
     }
 }
@@ -106,6 +106,7 @@ impl FromStr for TxHash {
 /// Transaction represents an individual, serializable Themelio transaction.
 #[derive(Clone, Arbitrary, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Transaction {
+    #[serde(with = "stdcode::asstr")]
     pub kind: TxKind,
     pub inputs: Vec<CoinID>,
     pub outputs: Vec<CoinData>,
