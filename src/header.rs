@@ -41,6 +41,7 @@ pub enum NetID {
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Arbitrary)]
 /// A block header, which commits to a particular SealedState.
 pub struct Header {
+    #[serde(with = "stdcode::asstr")]
     pub network: NetID,
     pub previous: HashVal,
     pub height: BlockHeight,
