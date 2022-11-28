@@ -36,7 +36,6 @@ pub enum TxKind {
     Faucet = 0xff,
     LiqDeposit = 0x52,
     LiqWithdraw = 0x53,
-
     Normal = 0x00,
     Stake = 0x10,
     Swap = 0x51,
@@ -89,10 +88,10 @@ impl FromStr for TxHash {
 }
 
 /// Transaction represents an individual, serializable Themelio transaction.
-#[serde_as]
-#[derive(Clone, Debug, Serialize, Deserialize, Hash, PartialEq, Eq, Default)]
+#[derive(Clone, Arbitrary, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Transaction {
     /// The "kind" of the transaction. Most transactions are of kind [TxKind::Normal].
+    #[serde(with = "stdcode::asstr")]
     pub kind: TxKind,
     /// The coins that this transaction spends, identified by [CoinID] (transaction hash and index)
     pub inputs: Vec<CoinID>,
