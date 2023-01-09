@@ -113,7 +113,7 @@ impl FromStr for TxHash {
 #[derive(Default, Clone, Debug, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Transaction {
     /// The "kind" of the transaction. Most transactions are of kind [TxKind::Normal].
-    #[serde(with = "stdcode::asstr")]
+    #[serde(with = "stdcode::try_asstr")]
     pub kind: TxKind,
     /// The coins that this transaction spends, identified by [CoinID] (transaction hash and index)
     pub inputs: Vec<CoinID>,
@@ -314,10 +314,10 @@ impl CoinID {
 #[derive(Serialize, Deserialize, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 /// The data bound to a coin ID. Contains the "contents" of a coin, i.e. its covenant hash, value, and coin type.
 pub struct CoinData {
-    #[serde(with = "stdcode::asstr")]
+    #[serde(with = "stdcode::try_asstr")]
     pub covhash: Address,
     pub value: CoinValue,
-    #[serde(with = "stdcode::asstr")]
+    #[serde(with = "stdcode::try_asstr")]
     pub denom: Denom,
     #[serde_as(as = "stdcode::HexBytes")]
     pub additional_data: Bytes,
