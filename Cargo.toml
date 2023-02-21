@@ -1,6 +1,6 @@
 [package]
 name = "themelio-structs"
-version = "0.3.0-beta.4"
+version = "0.3.0-beta.6"
 authors = ["Themelio Labs"]
 edition = "2021"
 
@@ -14,7 +14,7 @@ repository = "https://github.com/themeliolabs/themelio-structs"
 [dependencies]
 derive_more = "0.99.17"
 tmelcrypt = "0.2.4"
-stdcode = "0.1.11"
+stdcode = "0.1.14"
 num_enum = "0.5.7"
 serde_repr = "0.1.9"
 thiserror = "1.0.37"
