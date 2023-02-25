@@ -1,12 +1,12 @@
 [package]
-name = "themelio-structs"
-version = "0.3.0-beta.8"
-authors = ["Themelio Labs"]
+name = "melstructs"
+version = "0.3.0"
+
 edition = "2021"
 
-description = "Core data structures for Themelio"
+description = "Core data structures for Mel"
 license = "MPL-2.0"
-repository = "https://github.com/themeliolabs/themelio-structs"
+repository = "https://github.com/themeliolabs/melstructs"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
