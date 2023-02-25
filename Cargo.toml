@@ -5,7 +5,7 @@ version = "0.3.0"
 edition = "2021"
 
 description = "Core data structures for Mel"
-license = "MPL-2.0"
+license = "ISC"
 repository = "https://github.com/themeliolabs/melstructs"
 
 
