@@ -56,7 +56,7 @@ impl TransactionBuilder {
 
     /// Adds an output.
     pub fn output(mut self, data: CoinData) -> Self {
-        if data.denom != Denom::NewCoin {
+        if data.denom != Denom::NewCustom {
             *self.out_balance.entry(data.denom).or_default() += data.value;
         }
         self.in_progress.outputs.push(data);

@@ -335,7 +335,7 @@ pub enum Denom {
     Sym,
     Erg,
 
-    NewCoin,
+    NewCustom,
     Custom(TxHash),
 }
 
@@ -345,7 +345,7 @@ impl Display for Denom {
             Denom::Mel => "MEL".into(),
             Denom::Sym => "SYM".into(),
             Denom::Erg => "ERG".into(),
-            Denom::NewCoin => "(NEWCOIN)".into(),
+            Denom::NewCustom => "(NEWCUSTOM)".into(),
             Denom::Custom(hash) => format!("CUSTOM-{}", hash.0),
         };
         s.fmt(f)
@@ -367,7 +367,7 @@ impl FromStr for Denom {
             "MEL" => Ok(Denom::Mel),
             "SYM" => Ok(Denom::Sym),
             "ERG" => Ok(Denom::Erg),
-            "(NEWCOIN)" => Ok(Denom::NewCoin),
+            "(NEWCUSTOM)" => Ok(Denom::NewCustom),
             other => {
                 let splitted = other.split('-').collect::<Vec<_>>();
                 if splitted.len() != 2 || splitted[0] != "CUSTOM" {
@@ -386,7 +386,7 @@ impl Denom {
             Self::Mel => Bytes::from_static(b"m"),
             Self::Sym => Bytes::from_static(b"s"),
             Self::Erg => Bytes::from_static(b"d"),
-            Self::NewCoin => Bytes::new(),
+            Self::NewCustom => Bytes::new(),
             Self::Custom(hash) => Bytes::copy_from_slice(&hash.0),
         }
     }
@@ -397,7 +397,7 @@ impl Denom {
             b"s" => Self::Sym,
             b"d" => Self::Erg,
 
-            b"" => Self::NewCoin,
+            b"" => Self::NewCustom,
             other => Self::Custom(HashVal(other.try_into().ok()?).into()),
         })
     }
