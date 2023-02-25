@@ -161,8 +161,10 @@ impl FromStr for PoolKey {
         } else {
             let left: Denom = splitted[0].parse()?;
             let right: Denom = splitted[1].parse()?;
-
-            Ok(PoolKey { left, right })
+            if left == right {
+                return Err(ParseDenomError::Invalid);
+            }
+            Ok(PoolKey::new(left, right))
         }
     }
 }
@@ -173,12 +175,12 @@ impl PoolKey {
         Self { left: x, right: y }.to_canonical().unwrap()
     }
 
-    /// Gets the left-hand-size.
+    /// Gets the left-hand token denom.
     pub fn left(&self) -> Denom {
         self.left
     }
 
-    /// Gets the right-hand-size.
+    /// Gets the right-hand token denom.
     pub fn right(&self) -> Denom {
         self.right
     }
@@ -201,7 +203,7 @@ impl PoolKey {
         }
     }
 
-    /// Denomination of the pool liquidity token
+    /// Denomination of the pool-liquidity token corresponding to this PoolKey.
     pub fn liq_token_denom(&self) -> Denom {
         Denom::Custom(tmelcrypt::hash_keyed(b"liq", self.to_bytes()).into())
     }
