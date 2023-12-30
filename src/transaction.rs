@@ -235,6 +235,29 @@ impl Transaction {
             .saturating_sub(input_boon)
     }
 
+    fn raw_weight(&self) -> i128 {
+        let raw_length = stdcode::serialize(self).unwrap().len() as i128;
+        // we price in the net state "burden".
+        // how much is that? let's assume that history is stored for 1 month. this means that "stored" bytes are around 240 times more expensive than "temporary" bytes.
+        // we also take into account that stored stuff is probably going to be stuffed into something much cheaper (e.g. HDD rather than RAM), almost certainly more than 24 times cheaper.
+        // so it's probably "safe-ish" to say that stored things are 10 times more expensive than temporary things.
+        // econ efficiency/market stability wise it's probably okay to overprice storage, but probably not okay to underprice it.
+        // blockchain-spamming-as-HDD arbitrage is going to be really bad for the blockchain.
+        // penalize 1000 for every output and boost 1000 for every input. "non-refundable" because the fee can't be subzero
+        let output_penalty = self.outputs.len() as i128 * 1000;
+        let input_boon = self.inputs.len() as i128 * 1000;
+
+        raw_length + output_penalty - input_boon
+    }
+
+    /// Returns the "usable" fees that can be used to execute the covenants.
+    pub fn usable_fees(&self, fee_multiplier: u128) -> CoinValue {
+        let raw_weight = self.raw_weight();
+        eprintln!("raw_weight = {raw_weight}");
+        let fees_consumed_by_tx_itself = (raw_weight * (fee_multiplier as i128)) >> 16;
+        CoinValue((self.fee.0 as i128).saturating_sub(fees_consumed_by_tx_itself) as u128)
+    }
+
     /// Convenience function that constructs a CoinID that points to a certain output of this transaction. Panics if the index is out of bounds.
     pub fn output_coinid(&self, index: u8) -> CoinID {
         CoinID {
