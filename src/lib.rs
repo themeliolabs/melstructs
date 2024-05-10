@@ -1,6 +1,7 @@
 mod txbuilder;
 use std::str::FromStr;
 
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tmelcrypt::HashVal;
 pub use txbuilder::*;
@@ -18,7 +19,7 @@ pub use melswap::*;
 mod header;
 pub use header::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Checkpoint {
     pub height: BlockHeight,
     pub header_hash: HashVal,
